@@ -24,8 +24,8 @@ api = tweepy.API(auth)
 # Image settings
 IMAGE_PATH = "ddd.jpg"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_SIZE = 250  # Increased font size 7 times
-TEXT_POSITION = (60, 60)
+FONT_SIZE = 350  # Increased font size 7 times
+TEXT_POSITION = (50, 50)
 TEXT_COLOR = "darkgreen"  # Changed color to dark blue
 
 # CSV File Path
