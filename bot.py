@@ -24,9 +24,9 @@ api = tweepy.API(auth)
 # Image settings
 IMAGE_PATH = "ddd.png.jpg"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_SIZE = 50
+FONT_SIZE = 350  # Increased font size 7 times
 TEXT_POSITION = (50, 50)
-TEXT_COLOR = "white"
+TEXT_COLOR = "darkblue"  # Changed color to dark blue
 
 # CSV File Path
 CSV_FILE = "word_list.csv"
