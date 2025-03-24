@@ -1,73 +1,66 @@
 import os
 import tweepy
-import schedule
-import time
-from PIL import Image, ImageDraw, ImageFont
 import pandas as pd
-from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
 
-# Twitter API authentication (v2 for tweets, v1.1 for media upload)
+# Twitter API authentication
 client = tweepy.Client(
-    consumer_key=os.getenv("TWITTER_CONSUMER_KEY"),
-    consumer_secret=os.getenv("TWITTER_CONSUMER_SECRET"),
-    access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
-    access_token_secret=os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+    consumer_key=os.getenv("API_KEY"),
+    consumer_secret=os.getenv("API_SECRET"),
+    access_token=os.getenv("ACCESS_TOKEN"),
+    access_token_secret=os.getenv("ACCESS_SECRET")
 )
 
-auth = tweepy.OAuth1UserHandler(
-    os.getenv("TWITTER_CONSUMER_KEY"),
-    os.getenv("TWITTER_CONSUMER_SECRET"),
-    os.getenv("TWITTER_ACCESS_TOKEN"),
-    os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
-)
-api = tweepy.API(auth, wait_on_rate_limit=True)  # API v1.1 for media upload
+# Image and font settings
+IMAGE_PATH = "ddd.jpg"  # Background image
+FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT_SIZE = 50
+TEXT_COLOR = "white"
+TEXT_POSITION = (50, 50)  # Adjust this to center text properly
+
+# CSV File Path
+CSV_FILE = "word_list.csv"
 
 def create_word_image(word, meaning, example, output_path="word_of_the_day.png"):
     """Creates an image with the word, meaning, and example sentence."""
-    bg_image = Image.open("ddd.jpg")  # Fixed file name
-    draw = ImageDraw.Draw(bg_image)
-    font = ImageFont.truetype("arial.ttf", 50)
-    
+    img = Image.open(IMAGE_PATH)
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
+
+    # Format text
     text = f"{word}\n\nMeaning: {meaning}\n\nExample: {example}"
-    
-    image_width, image_height = bg_image.size
+
+    # Calculate text positioning
+    image_width, image_height = img.size
     text_width, text_height = draw.multiline_textbbox((0, 0), text, font=font)[2:]
-    
     x = (image_width - text_width) // 2
     y = (image_height - text_height) // 2
+
+    draw.multiline_text((x, y), text, font=font, fill=TEXT_COLOR, align="center")
     
-    draw.multiline_text((x, y), text, font=font, fill="white", align="center")
-    
-    bg_image.save(output_path)
+    img.save(output_path)
     return output_path
 
 def post_word_of_the_day():
     """Reads the next word from CSV, creates an image, and posts to Twitter."""
-    df = pd.read_csv("word_list.csv")
+    df = pd.read_csv(CSV_FILE)
     if df.empty:
         print("No more words in the list.")
         return
     
-    word, meaning, example = df.iloc[0]
+    word, meaning, example = df.iloc[0]  # Get first word
+
+    # Generate image
     word_image = create_word_image(word, meaning, example)
-    
-    # Upload media using API v1.1
-    media = api.media_upload(filename=word_image)
-    
-    # Post tweet with media using API v2
-    client.create_tweet(text="", media_ids=[media.media_id])
-    
+
+    # Upload media and tweet
+    media = client.media_upload(filename=word_image)  # Twitter API v1.1 function
+    client.create_tweet(text="", media_ids=[media.media_id])  # Post tweet with image
+
     # Remove posted word from CSV
     df = df.iloc[1:]
-    df.to_csv("word_list.csv", index=False)
+    df.to_csv(CSV_FILE, index=False)
     print(f"Posted: {word}")
 
-def job():
-    """Schedules the Word of the Day post."""
-    post_word_of_the_day()
-
-schedule.every().day.at("05:30").do(job)  # 05:30 UTC = 11:00 AM IST
-
-while True:
-    schedule.run_pending()
-    time.sleep(60)
+if __name__ == "__main__":
+    post_word_of_the_day()  # Runs once and exits
