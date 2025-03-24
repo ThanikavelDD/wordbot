@@ -1,83 +1,70 @@
 import tweepy
 import pandas as pd
 import os
+import schedule
+import time
+from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 
-# Load API keys from GitHub Secrets
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-ACCESS_SECRET = os.getenv("ACCESS_SECRET")
-
-# Authenticate with Twitter API v2 (for posting tweets)
+# Twitter API authentication
 client = tweepy.Client(
-    consumer_key=API_KEY,
-    consumer_secret=API_SECRET,
-    access_token=ACCESS_TOKEN,
-    access_token_secret=ACCESS_SECRET
+    consumer_key=os.getenv("TWITTER_CONSUMER_KEY"),
+    consumer_secret=os.getenv("TWITTER_CONSUMER_SECRET"),
+    access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
+    access_token_secret=os.getenv("TWITTER_ACCESS_SECRET")
 )
-
-# Authenticate with Twitter API v1.1 (for media upload)
-auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
-api = tweepy.API(auth)
-
-# Image settings
-IMAGE_PATH = "ddd.jpg"
-FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_SIZE = 50
-TEXT_COLOR = "white"
-TEXT_POSITION = (50, 50)
-
-# CSV File Path
-CSV_FILE = "word_list.csv"
 
 def create_word_image(word, meaning, example):
     """Creates an image with the word, meaning, and example sentence."""
-    img = Image.open(IMAGE_PATH)
+    img = Image.open("background.png")
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
-
-    # Positioning text
-    text = f"{word}\n\nMeaning: {meaning}\nExample: {example}"
-    text_x, text_y, text_w, text_h = draw.textbbox((0, 0), text, font=font)
+    
+    font_word = ImageFont.truetype("arial.ttf", 80)
+    font_text = ImageFont.truetype("arial.ttf", 40)
+    
+    # Positioning
     img_width, img_height = img.size
-    x = (img_width - text_w) // 2
-    y = (img_height - text_h) // 2
-
-    # Draw text on image
-    draw.text((x, y), text, font=font, fill=TEXT_COLOR)
-
-    # Save image
-    output_path = "word_of_the_day.jpg"
+    padding = 50
+    
+    # Prepare text content
+    text = f"{word}\n\nMeaning: {meaning}\n\nExample: {example}"
+    
+    # Calculate text size
+    text_width, text_height = draw.multiline_textbbox((0, 0), text, font=font_text)[2:]
+    x = (img_width - text_width) // 2
+    y = (img_height - text_height) // 2
+    
+    # Draw text
+    draw.multiline_text((x, y), text, font=font_text, fill="white", align="center")
+    
+    output_path = "word_of_the_day.png"
     img.save(output_path)
     return output_path
 
 def post_word_of_the_day():
-    """Reads the CSV, creates an image, and posts it to Twitter."""
-    df = pd.read_csv(CSV_FILE)
-
+    """Reads the next word from the CSV and posts it to Twitter."""
+    df = pd.read_csv("word_list.csv")
     if df.empty:
-        print("Word list is empty. No words to post.")
+        print("No words left in the list.")
         return
-
-    # Get the first word entry
+    
     word, meaning, example = df.iloc[0]
-
-    # Create image with text
     word_image = create_word_image(word, meaning, example)
-
-    # Upload media using Tweepy API v1.1
-    media = api.media_upload(filename=word_image)
-
-    # Post tweet with image using Tweepy API v2
-    status = f"Word of the Day: {word}\nMeaning: {meaning}\nExample: {example}"
-    client.create_tweet(text=status, media_ids=[media.media_id_string])
-
-    # Remove the posted word from CSV
-    df = df.iloc[1:]
-    df.to_csv(CSV_FILE, index=False)
-
+    
+    media = client.media_upload(filename=word_image)
+    tweet_text = ""
+    client.create_tweet(text=tweet_text, media_ids=[media.media_id])
+    
+    df = df.iloc[1:]  # Remove the posted word
+    df.to_csv("word_list.csv", index=False)
     print(f"Posted: {word}")
+
+def schedule_jobs():
+    """Schedules the bot to run daily at 11:00 AM IST."""
+    schedule.every().day.at("05:30").do(post_word_of_the_day)  # 11:00 AM IST
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
 
 if __name__ == "__main__":
     post_word_of_the_day()
