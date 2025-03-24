@@ -22,11 +22,11 @@ auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET
 api = tweepy.API(auth)
 
 # Image settings
-IMAGE_PATH = "ddd.png.jpg"
+IMAGE_PATH = "ddd.jpg"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_SIZE = 250  # Increased font size 7 times
 TEXT_POSITION = (60, 60)
-TEXT_COLOR = "darkblue"  # Changed color to dark blue
+TEXT_COLOR = "darkgreen"  # Changed color to dark blue
 
 # CSV File Path
 CSV_FILE = "word_list.csv"
