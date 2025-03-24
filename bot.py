@@ -22,7 +22,7 @@ auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET
 api = tweepy.API(auth)
 
 # Image settings
-IMAGE_PATH = "ddd.jpg"
+IMAGE_PATH = "ddd.png.jpg"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_SIZE = 50
 TEXT_POSITION = (50, 50)
