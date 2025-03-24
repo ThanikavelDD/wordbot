@@ -9,7 +9,7 @@ API_SECRET = os.getenv("API_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 ACCESS_SECRET = os.getenv("ACCESS_SECRET")
 
-# Authenticate with Twitter API v2 (for tweets)
+# Authenticate with Twitter API v2
 client = tweepy.Client(
     consumer_key=API_KEY,
     consumer_secret=API_SECRET,
@@ -17,22 +17,44 @@ client = tweepy.Client(
     access_token_secret=ACCESS_SECRET
 )
 
-# Authenticate with Twitter API v1.1 (for media uploads)
-auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
-api = tweepy.API(auth)
-
 # Image settings
 IMAGE_PATH = "ddd.jpg"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_SIZE = 50
-TEXT_POSITION = (50, 50)
+FONT_SIZE = 50  # Default size
 TEXT_COLOR = "white"
 
 # CSV File Path
 CSV_FILE = "word_list.csv"
 
+def create_word_image(word, meaning, example):
+    """Creates an image with the word, meaning, and example text."""
+    img = Image.open(IMAGE_PATH)
+    draw = ImageDraw.Draw(img)
+    
+    # Load font
+    font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
+
+    # Define text content
+    text = f"{word}\n\nMeaning: {meaning}\n\nExample: {example}"
+    
+    # Get image dimensions
+    img_width, img_height = img.size
+    text_width, text_height = draw.multiline_textsize(text, font=font)
+    
+    # Position text at the center
+    x = (img_width - text_width) // 2
+    y = (img_height - text_height) // 2
+    
+    # Draw text
+    draw.multiline_text((x, y), text, font=font, fill=TEXT_COLOR, align="center")
+
+    # Save the image
+    word_image = "word_of_the_day.jpg"
+    img.save(word_image)
+    return word_image
+
 def post_word_of_the_day():
-    # Read the word list
+    """Reads a word from CSV, generates an image, and tweets it."""
     df = pd.read_csv(CSV_FILE)
     
     if df.empty:
@@ -41,21 +63,12 @@ def post_word_of_the_day():
     
     # Get the first word entry
     word, meaning, example = df.iloc[0]
-    
-    # Create image with word overlay
-    img = Image.open(IMAGE_PATH)
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
-    draw.text(TEXT_POSITION, word, fill=TEXT_COLOR, font=font)
-    
-    # Save image
-    word_image = "word_of_the_day.jpg"
-    img.save(word_image)
-    
-    # Upload media using API v1.1
-    media = api.media_upload(filename=word_image)
 
-    # Post tweet using API v2
+    # Create image with full text
+    word_image = create_word_image(word, meaning, example)
+    
+    # Post to Twitter
+    media = client.media_upload(filename=word_image)
     status = f"Word of the Day: {word}\nMeaning: {meaning}\nExample: {example}"
     client.create_tweet(text=status, media_ids=[media.media_id])
     
