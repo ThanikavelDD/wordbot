@@ -9,13 +9,17 @@ API_SECRET = os.getenv("API_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 ACCESS_SECRET = os.getenv("ACCESS_SECRET")
 
-# Authenticate with Twitter API v2
+# Authenticate with Twitter API v2 (for tweets)
 client = tweepy.Client(
     consumer_key=API_KEY,
     consumer_secret=API_SECRET,
     access_token=ACCESS_TOKEN,
     access_token_secret=ACCESS_SECRET
 )
+
+# Authenticate with Twitter API v1.1 (for media uploads)
+auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
+api = tweepy.API(auth)
 
 # Image settings
 IMAGE_PATH = "ddd.jpg"
@@ -48,8 +52,10 @@ def post_word_of_the_day():
     word_image = "word_of_the_day.jpg"
     img.save(word_image)
     
-    # Post to Twitter
-    media = client.media_upload(filename=word_image)
+    # Upload media using API v1.1
+    media = api.media_upload(filename=word_image)
+
+    # Post tweet using API v2
     status = f"Word of the Day: {word}\nMeaning: {meaning}\nExample: {example}"
     client.create_tweet(text=status, media_ids=[media.media_id])
     
