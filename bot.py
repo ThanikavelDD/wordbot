@@ -1,6 +1,7 @@
 import tweepy
 import pandas as pd
 import os
+import subprocess  # For Git commands
 from PIL import Image, ImageDraw, ImageFont
 
 # Load API keys from GitHub Secrets
@@ -24,9 +25,9 @@ api = tweepy.API(auth)
 # Image settings
 IMAGE_PATH = "ddd.jpg"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_SIZE = 350  # Increased font size 7 times
+FONT_SIZE = 350
 TEXT_POSITION = (50, 50)
-TEXT_COLOR = "darkgreen"  # Changed color to dark blue
+TEXT_COLOR = "darkgreen"
 
 # CSV File Path
 CSV_FILE = "word_list.csv"
@@ -62,7 +63,14 @@ def post_word_of_the_day():
     # Remove posted word from CSV
     df = df.iloc[1:]
     df.to_csv(CSV_FILE, index=False)
-    
+
+    # ✅ Commit and Push Updated CSV to GitHub
+    subprocess.run(["git", "config", "--global", "user.email", "github-actions@example.com"])
+    subprocess.run(["git", "config", "--global", "user.name", "GitHub Actions"])
+    subprocess.run(["git", "add", CSV_FILE])
+    subprocess.run(["git", "commit", "-m", f"Removed posted word: {word}"])
+    subprocess.run(["git", "push"])
+
     print(f"Posted: {word}")
 
 if __name__ == "__main__":
