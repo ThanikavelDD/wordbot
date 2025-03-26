@@ -38,6 +38,13 @@ jobs:
         run: |
           git config --global user.email "github-actions@example.com"
           git config --global user.name "GitHub Actions"
+          
+          # Check if word_list.csv has changes
+          if git diff --quiet word_list.csv; then
+            echo "No changes in word_list.csv, skipping commit."
+            exit 0
+          fi
+
           git add word_list.csv
           git commit -m "Removed posted word from CSV"
           git push
