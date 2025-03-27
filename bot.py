@@ -25,7 +25,7 @@ api = tweepy.API(auth)
 # Image settings
 IMAGE_PATH = "ddd.jpg"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_SIZE = 300  # Adjusted for a 12-letter word
+FONT_SIZE = 450  # Adjusted for a 12-letter word
 TEXT_POSITION = (300, 580)
 TEXT_COLOR = "white"
 
