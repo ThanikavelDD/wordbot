@@ -27,7 +27,7 @@ IMAGE_PATH = "ddd.jpg"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_SIZE = 450  # Adjusted for a 12-letter word
 TEXT_POSITION = (300, 580)
-TEXT_COLOR = "white"
+TEXT_COLOR = "darkgreen"
 
 # CSV File Path
 CSV_FILE = "word_list.csv"
